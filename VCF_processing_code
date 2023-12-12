@@ -1,0 +1,26 @@
+###Script for Processing the Unfiltered VCF File From Clare et al. 2023###
+
+##following steps done in linux based terminal##
+bcftools norm --rm-dup any CascadeSNPs.vcf.gz > CascadeSNPs_noDup.vcf #remove any duplicate records
+vcftools --vcf CascadeSNPs_noDup.vcf --minQ 30.0 --min-alleles 2 --max-alleles 2 --remove-indels --recode --recode-INFO-all --out CascadeSNPs_noDup_q30_bi_allelic #keep only bi-allelic SNPs with a minimum quality of 30
+
+##following steps done in R version 4.2.0##
+library(vcfR) #load vcfR package
+vcf <- read.vcfR(file.choose(), verbose = F) #read in the lightly filtered (no duplicate data, minimum quality of 30, bi-allelic SNPs) .vcf.gz file
+dp <- extract.gt(vcf, element = "DP", as.numeric = T) #calculate the raw read depth of every variant per sample
+boxplot(dp, ylab = "Depth") #make a boxplot to visualize the raw read depth per locus per sample
+sums <- apply(dp, MARGIN=2, quantile, probs=c(0.05,0.95), na.rm=TRUE) #calculate a 90% confidence interval for sample read depth
+dp2 <- sweep(dp, MARGIN=2, FUN = "-", sums[1,])
+dp[dp2 < 0] <- NA
+dp2 <- sweep(dp, MARGIN =2, FUN = "-", sums[2,])
+dp[dp2 > 0] <- NA
+dp[dp < 4] <- NA #set a minimum read depth of 4 for each genotype call
+boxplot(dp, ylab = "Depth") #visualize the filtered read depth of loci within the 90% confidence interval
+is.na( vcf@gt[,-1][is.na(dp) ] ) <- TRUE #update the original vcfR object so that all genotype calls not within the 90% confidence interval are changed to missing.
+vcf #observe the increased percent of missing data
+write.vcf(vcf, file = "CascadeSNPs_noDup_q30_bi_allelic_depth4_90.vcf.gz") #write the coverage filtered object to a vcf.gz file
+
+##following steps done in linux base environment##
+vcftools --gzvcf CascadeSNPs_noDup_q30_bi_allelic_depth4_90.vcf.gz --max-missing 0.25 --maf 0.05 --recode --recode-INFO-all --out CascadeSNPs_noDup_q30_bi_allelic_depth4_90_25miss_maf05 #filiter out sites with more than 25% missing data and impose a minimum minor allele frequency of 5%
+
+##Now impute CascadeSNPs_noDup_q30_bi_allelic_depth4_90_25miss_maf05 using the LDKNNi algorithm implemented in the GUI version of TASSEL5##
