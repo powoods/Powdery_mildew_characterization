@@ -1,4 +1,6 @@
 ###Script for Processing the Unfiltered VCF File From Clare et al. 2023###
+##Author: Patrick Woods##
+
 
 ##following steps done in linux based terminal##
 bcftools norm --rm-dup any CascadeSNPs.vcf.gz > CascadeSNPs_noDup.vcf #remove any duplicate records
