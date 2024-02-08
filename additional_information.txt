@@ -1,0 +1,1 @@
+Bioinformatics packagesused for analyses were installed on a local Intel-based MacOS machine using miniconda.
