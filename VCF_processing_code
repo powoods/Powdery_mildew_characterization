@@ -2,7 +2,7 @@
 ##Author: Patrick Woods##
 
 
-##following steps done in linux based terminal##
+##following steps done in linux based terminal with bioinformatics packages 'BCFtools' and 'VCFtools'##
 bcftools norm --rm-dup any CascadeSNPs.vcf.gz > CascadeSNPs_noDup.vcf #remove any duplicate records
 vcftools --vcf CascadeSNPs_noDup.vcf --minQ 30.0 --min-alleles 2 --max-alleles 2 --remove-indels --recode --recode-INFO-all --out CascadeSNPs_noDup_q30_bi_allelic #keep only bi-allelic SNPs with a minimum quality of 30
 
